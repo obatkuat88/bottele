@@ -1,24 +1,46 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TonConnectUIProvider, TonConnectButton } from '@tonconnect/ui-react';
 import { useTelegram } from './hooks/useTelegram';
 import { FortuneCookie } from './components/FortuneCookie';
 import { Share } from './components/Share';
 import './App.css';
 
-const manifestUrl = 'https://your-app.com/tonconnect-manifest.json'; // In production, use your actual URL
+const manifestUrl = 'https://obatkuat88.github.io/bottele/tonconnect-manifest.json';
 
 function App() {
   const { tg, user } = useTelegram();
 
+  const [points, setPoints] = useState(() => parseInt(localStorage.getItem('fortune_points') || '0'));
+  const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('fortune_streak') || '0'));
+  const [lastCracked, setLastCracked] = useState(() => localStorage.getItem('fortune_last_cracked') || null);
+
   useEffect(() => {
-    if (tg) {
-      tg.MainButton.setParams({
-        text: 'DAILY REWARD',
-        color: '#3390ec',
-      });
-      tg.MainButton.show();
+    localStorage.setItem('fortune_points', points.toString());
+    localStorage.setItem('fortune_streak', streak.toString());
+    if (lastCracked) localStorage.setItem('fortune_last_cracked', lastCracked);
+  }, [points, streak, lastCracked]);
+
+  const handleRewardClaimed = (amount) => {
+    setPoints(prev => prev + amount);
+    const today = new Date().toDateString();
+    
+    // Check if streak applies
+    if (lastCracked) {
+      const lastDate = new Date(lastCracked);
+      const diffTime = Math.abs(new Date() - lastDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      
+      if (diffDays === 1) {
+        setStreak(prev => prev + 1);
+      } else if (diffDays > 1) {
+        setStreak(1);
+      }
+    } else {
+      setStreak(1);
     }
-  }, [tg]);
+    
+    setLastCracked(today);
+  };
 
   return (
     <TonConnectUIProvider manifestUrl={manifestUrl}>
@@ -35,15 +57,15 @@ function App() {
           <div className="stats-card">
             <div className="stat">
               <span className="stat-label">Points</span>
-              <span className="stat-value">1,250 💎</span>
+              <span className="stat-value">{points.toLocaleString()} 💎</span>
             </div>
             <div className="stat">
               <span className="stat-label">Streak</span>
-              <span className="stat-value">5 Days 🔥</span>
+              <span className="stat-value">{streak} Days 🔥</span>
             </div>
           </div>
 
-          <FortuneCookie user={user} />
+          <FortuneCookie user={user} onRewardClaimed={handleRewardClaimed} lastCracked={lastCracked} />
           
           <Share tg={tg} user={user} />
         </main>

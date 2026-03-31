@@ -13,15 +13,22 @@ const FORTUNES = [
   "Your streak is your strength."
 ];
 
-export function FortuneCookie({ user }) {
-  const [cracked, setCracked] = useState(false);
-  const [fortune, setFortune] = useState("");
+export function FortuneCookie({ user, onRewardClaimed, lastCracked }) {
+  const isCrackedToday = lastCracked === new Date().toDateString();
+  const [cracked, setCracked] = useState(isCrackedToday);
+  const [fortune, setFortune] = useState(isCrackedToday ? "You already received your fortune today. Come back tomorrow!" : "");
+  const [reward, setReward] = useState(0);
 
   const handleCrack = () => {
     if (cracked) return;
     const randomFortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+    const gainedPoints = Math.floor(Math.random() * 50) + 50; // 50 to 100 points
+    
     setFortune(randomFortune);
+    setReward(gainedPoints);
     setCracked(true);
+    
+    if (onRewardClaimed) onRewardClaimed(gainedPoints);
   };
 
   return (
@@ -44,8 +51,8 @@ export function FortuneCookie({ user }) {
         >
           <div className="cookie-pieces">✨ 🥠 ✨</div>
           <p className="fortune-text">"{fortune}"</p>
+          {reward > 0 && <p className="reward-text" style={{ color: '#4caf50', fontWeight: 'bold' }}>You earned +{reward} 💎</p>}
           <p className="user-greeting">Good luck, {user?.first_name || 'Friend'}!</p>
-          <button className="reset-btn" onClick={() => setCracked(false)}>Get Another (Demo)</button>
         </motion.div>
       )}
     </div>

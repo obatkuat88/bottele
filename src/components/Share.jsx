@@ -1,5 +1,5 @@
 export function Share({ tg, user }) {
-  const referralLink = `https://t.me/ton_fortune_bot?start=ref_${user?.id || '0'}`;
+  const referralLink = `https://t.me/bottele_bot?start=ref_${user?.id || '0'}`;
 
   const handleShare = () => {
     if (!tg) return;
